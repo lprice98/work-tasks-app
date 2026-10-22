@@ -103,3 +103,69 @@ completedToggleEl.addEventListener('click', () => {
   completedTasksEl.classList.toggle('hidden', !completedOpen);
   completedToggleEl.textContent = `${completedOpen ? '▼' : '▶'} Completed (${getCompleted(tasks, activeCategory).length})`;
 });
+
+function openAddForm() {
+  editingId = null;
+  formTitle.textContent = 'New Task';
+  fTitle.value = '';
+  fCategory.value = activeCategory;
+  fPriority.value = 'medium';
+  fDue.value = '';
+  fNotes.value = '';
+  formPanel.classList.remove('hidden');
+  fTitle.focus();
+}
+
+function openEditForm(task) {
+  editingId = task.id;
+  formTitle.textContent = 'Edit Task';
+  fTitle.value = task.title;
+  fCategory.value = task.category;
+  fPriority.value = task.priority;
+  fDue.value = task.dueDate || '';
+  fNotes.value = task.notes || '';
+  formPanel.classList.remove('hidden');
+  fTitle.focus();
+}
+
+function closeForm() {
+  formPanel.classList.add('hidden');
+  editingId = null;
+}
+
+async function saveForm() {
+  const title = fTitle.value.trim();
+  if (!title) { fTitle.focus(); return; }
+
+  if (editingId) {
+    tasks = updateTask(tasks, editingId, {
+      title,
+      category: fCategory.value,
+      priority: fPriority.value,
+      dueDate: fDue.value || null,
+      notes: fNotes.value,
+    });
+  } else {
+    const task = createTask({
+      title,
+      category: fCategory.value,
+      priority: fPriority.value,
+      dueDate: fDue.value || null,
+      notes: fNotes.value,
+    });
+    tasks = [...tasks, task];
+  }
+
+  await save();
+  activeCategory = fCategory.value;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.category === activeCategory);
+  });
+  closeForm();
+  renderTasks();
+}
+
+document.getElementById('add-btn').addEventListener('click', openAddForm);
+document.getElementById('form-cancel').addEventListener('click', closeForm);
+document.getElementById('form-save').addEventListener('click', saveForm);
+fTitle.addEventListener('keydown', e => { if (e.key === 'Enter') saveForm(); });
