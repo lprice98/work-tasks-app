@@ -169,3 +169,45 @@ document.getElementById('add-btn').addEventListener('click', openAddForm);
 document.getElementById('form-cancel').addEventListener('click', closeForm);
 document.getElementById('form-save').addEventListener('click', saveForm);
 fTitle.addEventListener('keydown', e => { if (e.key === 'Enter') saveForm(); });
+
+function handleTaskAction(e) {
+  const action = e.target.dataset.action;
+  if (!action) return;
+  const card = e.target.closest('.task-card');
+  if (!card) return;
+  const id = card.dataset.id;
+
+  if (action === 'toggle') {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    tasks = task.completed ? uncompleteTask(tasks, id) : completeTask(tasks, id);
+    save();
+    renderTasks();
+    return;
+  }
+
+  if (action === 'delete') {
+    tasks = deleteTask(tasks, id);
+    save();
+    renderTasks();
+    return;
+  }
+
+  if (action === 'edit') {
+    const task = tasks.find(t => t.id === id);
+    if (task) openEditForm(task);
+  }
+}
+
+function handleTaskExpand(e) {
+  if (e.target.dataset.action) return;
+  const header = e.target.closest('.task-header');
+  if (!header) return;
+  const body = header.nextElementSibling;
+  if (body && body.classList.contains('task-body')) {
+    body.classList.toggle('open');
+  }
+}
+
+activeTasksEl.addEventListener('click', e => { handleTaskAction(e); handleTaskExpand(e); });
+completedTasksEl.addEventListener('click', e => { handleTaskAction(e); handleTaskExpand(e); });
