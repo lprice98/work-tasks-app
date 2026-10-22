@@ -87,3 +87,19 @@ async function init() {
 }
 
 init();
+
+document.getElementById('tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  activeCategory = tab.dataset.category;
+  completedOpen = false;
+  renderTasks();
+});
+
+completedToggleEl.addEventListener('click', () => {
+  completedOpen = !completedOpen;
+  completedTasksEl.classList.toggle('hidden', !completedOpen);
+  completedToggleEl.textContent = `${completedOpen ? '▼' : '▶'} Completed (${getCompleted(tasks, activeCategory).length})`;
+});
