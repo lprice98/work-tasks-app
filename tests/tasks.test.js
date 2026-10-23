@@ -6,6 +6,8 @@ const {
   updateTask,
   getActive,
   getCompleted,
+  getUpcoming,
+  rolloverTasks,
 } = require('../src/tasks');
 
 describe('createTask', () => {
@@ -107,5 +109,74 @@ describe('getCompleted', () => {
     const result = getCompleted(updated, 'today');
     expect(result).toHaveLength(1);
     expect(result[0].title).toBe('A');
+  });
+});
+
+describe('getUpcoming', () => {
+  test('returns incomplete tasks with dueDate in the future, sorted ascending', () => {
+    const t1 = createTask({ title: 'Far', category: 'thisweek', priority: 'low', dueDate: '2030-01-15' });
+    const t2 = createTask({ title: 'Near', category: 'today', priority: 'low', dueDate: '2030-01-01' });
+    const t3 = createTask({ title: 'Past', category: 'backlog', priority: 'low', dueDate: '2020-01-01' });
+    const t4 = createTask({ title: 'NoDue', category: 'today', priority: 'low' });
+    const result = getUpcoming([t1, t2, t3, t4], '2026-10-23');
+    expect(result).toHaveLength(2);
+    expect(result[0].title).toBe('Near');
+    expect(result[1].title).toBe('Far');
+  });
+
+  test('excludes completed tasks', () => {
+    const t = createTask({ title: 'A', category: 'today', priority: 'low', dueDate: '2030-01-01' });
+    const done = completeTask([t], t.id);
+    expect(getUpcoming(done, '2026-10-23')).toHaveLength(0);
+  });
+
+  test('returns empty array when no upcoming tasks', () => {
+    expect(getUpcoming([], '2026-10-23')).toHaveLength(0);
+  });
+});
+
+describe('rolloverTasks', () => {
+  test('moves overdue non-today tasks to today', () => {
+    const t = createTask({ title: 'Old', category: 'thisweek', priority: 'low', dueDate: '2026-10-01' });
+    const result = rolloverTasks([t], '2026-10-23');
+    expect(result[0].category).toBe('today');
+  });
+
+  test('does not move today tasks', () => {
+    const t = createTask({ title: 'A', category: 'today', priority: 'low', dueDate: '2026-10-01' });
+    const result = rolloverTasks([t], '2026-10-23');
+    expect(result[0].category).toBe('today');
+  });
+
+  test('does not move completed tasks', () => {
+    const t = createTask({ title: 'A', category: 'backlog', priority: 'low', dueDate: '2026-10-01' });
+    const done = completeTask([t], t.id);
+    const result = rolloverTasks(done, '2026-10-23');
+    expect(result[0].category).toBe('backlog');
+  });
+
+  test('does not move tasks with no due date', () => {
+    const t = createTask({ title: 'A', category: 'backlog', priority: 'low' });
+    const result = rolloverTasks([t], '2026-10-23');
+    expect(result[0].category).toBe('backlog');
+  });
+
+  test('does not move tasks with future due date', () => {
+    const t = createTask({ title: 'A', category: 'thisweek', priority: 'low', dueDate: '2030-01-01' });
+    const result = rolloverTasks([t], '2026-10-23');
+    expect(result[0].category).toBe('thisweek');
+  });
+
+  test('moves task due exactly today', () => {
+    const t = createTask({ title: 'A', category: 'backlog', priority: 'low', dueDate: '2026-10-23' });
+    const result = rolloverTasks([t], '2026-10-23');
+    expect(result[0].category).toBe('today');
+  });
+
+  test('does not mutate original tasks', () => {
+    const t = createTask({ title: 'A', category: 'thisweek', priority: 'low', dueDate: '2026-10-01' });
+    const original = [t];
+    rolloverTasks(original, '2026-10-23');
+    expect(original[0].category).toBe('thisweek');
   });
 });

@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { rolloverTasks } = require('./src/tasks');
 
 const DATA_FILE = path.join(app.getPath('userData'), 'tasks.json');
 
@@ -30,7 +31,13 @@ ipcMain.handle('tasks:read', () => {
   ensureDataDir();
   if (!fs.existsSync(DATA_FILE)) return [];
   try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    const today = new Date().toISOString().slice(0, 10);
+    const rolled = rolloverTasks(raw, today);
+    if (rolled.some((t, i) => t.category !== raw[i].category)) {
+      fs.writeFileSync(DATA_FILE, JSON.stringify(rolled, null, 2));
+    }
+    return rolled;
   } catch {
     return [];
   }

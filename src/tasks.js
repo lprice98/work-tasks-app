@@ -40,6 +40,21 @@ function getCompleted(tasks, category) {
   return tasks.filter(t => t.category === category && t.completed);
 }
 
+function getUpcoming(tasks, today) {
+  return tasks
+    .filter(t => !t.completed && t.dueDate && t.dueDate > today)
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+}
+
+function rolloverTasks(tasks, today) {
+  return tasks.map(t => {
+    if (!t.completed && t.dueDate && t.dueDate <= today && t.category !== 'today') {
+      return { ...t, category: 'today' };
+    }
+    return t;
+  });
+}
+
 if (typeof module !== 'undefined') {
-  module.exports = { createTask, completeTask, uncompleteTask, deleteTask, updateTask, getActive, getCompleted };
+  module.exports = { createTask, completeTask, uncompleteTask, deleteTask, updateTask, getActive, getCompleted, getUpcoming, rolloverTasks };
 }

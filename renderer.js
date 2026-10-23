@@ -57,8 +57,13 @@ function renderTaskCard(task) {
 }
 
 function renderTasks() {
-  const active = getActive(tasks, activeCategory);
-  const completed = getCompleted(tasks, activeCategory);
+  const today = new Date().toISOString().slice(0, 10);
+  const active = activeCategory === 'upcoming'
+    ? getUpcoming(tasks, today)
+    : getActive(tasks, activeCategory);
+  const completed = activeCategory === 'upcoming'
+    ? []
+    : getCompleted(tasks, activeCategory);
 
   activeTasksEl.innerHTML = '';
   active.forEach(t => activeTasksEl.appendChild(renderTaskCard(t)));
@@ -108,7 +113,7 @@ function openAddForm() {
   editingId = null;
   formTitle.textContent = 'New Task';
   fTitle.value = '';
-  fCategory.value = activeCategory;
+  fCategory.value = activeCategory === 'upcoming' ? 'today' : activeCategory;
   fPriority.value = 'medium';
   fDue.value = '';
   fNotes.value = '';
