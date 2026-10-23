@@ -264,3 +264,36 @@ body {
   color: #4fc3f7;
   margin-left: 4px;
 }
+
+.tab-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 0 5px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 15px;
+}
+.tab-badge:empty { display: none; }
+
+.task-card[data-priority="high"]   { border-left: 3px solid var(--high); }
+.task-card[data-priority="medium"] { border-left: 3px solid var(--medium); }
+.task-card[data-priority="low"]    { border-left: 3px solid var(--low); }
+
+.empty-state {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 32px 0;
+  text-align: center;
+  font-size: 13px;
+}
+
+.delete-confirm-msg {
+  color: var(--high);
+  font-size: 12px;
+  margin-right: 6px;
+}

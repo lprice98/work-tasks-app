@@ -39,6 +39,7 @@ function renderTaskCard(task, { showCategory = false } = {}) {
   const card = document.createElement('div');
   card.className = 'task-card' + (task.completed ? ' completed' : '');
   card.dataset.id = task.id;
+  card.dataset.priority = task.priority;
 
   const due = task.dueDate ? `<span class="task-due">${escapeHtml(task.dueDate)}</span>` : '';
   const catBadge = showCategory ? `<span class="task-cat">${escapeHtml(categoryLabel(task.category))}</span>` : '';
@@ -83,7 +84,20 @@ function renderTasks() {
   }
 
   activeTasksEl.innerHTML = '';
-  active.forEach(t => activeTasksEl.appendChild(renderTaskCard(t, { showCategory: showCat })));
+  if (active.length === 0) {
+    const emptyEl = document.createElement('div');
+    emptyEl.className = 'empty-state';
+    if (searchQuery) {
+      emptyEl.textContent = 'No tasks match your search.';
+    } else if (activeCategory === 'upcoming') {
+      emptyEl.textContent = 'No upcoming tasks with due dates.';
+    } else {
+      emptyEl.textContent = 'No tasks here — press N to add one.';
+    }
+    activeTasksEl.appendChild(emptyEl);
+  } else {
+    active.forEach(t => activeTasksEl.appendChild(renderTaskCard(t, { showCategory: showCat })));
+  }
 
   completedTasksEl.innerHTML = '';
   completed.forEach(t => completedTasksEl.appendChild(renderTaskCard(t, { showCategory: showCat })));
@@ -97,6 +111,21 @@ function renderTasks() {
   }
   completedTasksEl.classList.toggle('hidden', !completedOpen);
   completedToggleEl.textContent = `${completedOpen ? '▼' : '▶'} Completed (${completed.length})`;
+
+  updateTabBadges();
+}
+
+function updateTabBadges() {
+  const today = new Date().toISOString().slice(0, 10);
+  document.querySelectorAll('.tab').forEach(tab => {
+    const badge = tab.querySelector('.tab-badge');
+    if (!badge) return;
+    const cat = tab.dataset.category;
+    const count = cat === 'upcoming'
+      ? getUpcoming(tasks, today).length
+      : getActive(tasks, cat).length;
+    badge.textContent = count > 0 ? count : '';
+  });
 }
 
 async function save() {
@@ -230,9 +259,25 @@ function handleTaskAction(e) {
   }
 
   if (action === 'delete') {
-    tasks = deleteTask(tasks, id);
-    save();
-    renderTasks();
+    if (card.dataset.confirming === 'true') {
+      tasks = deleteTask(tasks, id);
+      save();
+      renderTasks();
+    } else {
+      card.dataset.confirming = 'true';
+      const actionsEl = card.querySelector('.task-actions');
+      actionsEl.innerHTML = `
+        <span class="delete-confirm-msg">Delete this task?</span>
+        <button data-action="delete">Yes, delete</button>
+        <button data-action="cancel-delete">Cancel</button>
+      `;
+    }
+    return;
+  }
+
+  if (action === 'cancel-delete') {
+    const task = tasks.find(t => t.id === id);
+    if (task) card.replaceWith(renderTaskCard(task, { showCategory: !!searchQuery }));
     return;
   }
 
