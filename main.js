@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { rolloverTasks } = require('./src/tasks');
@@ -8,6 +8,22 @@ const DATA_FILE = path.join(app.getPath('userData'), 'tasks.json');
 let win = null;
 let tray = null;
 let isQuitting = false;
+let notificationSent = false;
+
+function sendDueNotification(tasks, today) {
+  if (!Notification.isSupported()) return;
+  const dueToday = tasks.filter(t => !t.completed && t.dueDate === today);
+  const overdue  = tasks.filter(t => !t.completed && t.dueDate && t.dueDate < today);
+  if (dueToday.length === 0 && overdue.length === 0) return;
+  const parts = [];
+  if (dueToday.length) parts.push(`${dueToday.length} due today`);
+  if (overdue.length)  parts.push(`${overdue.length} overdue`);
+  new Notification({
+    title: 'Work Tasks',
+    body: parts.join(' · '),
+    icon: path.join(__dirname, 'build', 'icon.ico'),
+  }).show();
+}
 
 function ensureDataDir() {
   const dir = path.dirname(DATA_FILE);
@@ -54,6 +70,10 @@ ipcMain.handle('tasks:read', () => {
     const rolled = rolloverTasks(raw, today);
     if (rolled.some((t, i) => t.category !== raw[i].category)) {
       fs.writeFileSync(DATA_FILE, JSON.stringify(rolled, null, 2));
+    }
+    if (!notificationSent) {
+      notificationSent = true;
+      sendDueNotification(rolled, today);
     }
     return rolled;
   } catch {

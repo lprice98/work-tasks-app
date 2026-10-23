@@ -41,9 +41,15 @@ function renderTaskCard(task, { showCategory = false } = {}) {
   card.dataset.id = task.id;
   card.dataset.priority = task.priority;
 
+  const today = new Date().toISOString().slice(0, 10);
   const due = task.dueDate ? `<span class="task-due">${escapeHtml(task.dueDate)}</span>` : '';
   const catBadge = showCategory ? `<span class="task-cat">${escapeHtml(categoryLabel(task.category))}</span>` : '';
   const repeatBadge = task.repeat ? `<span class="task-repeat">↻ ${task.repeat}</span>` : '';
+  let overdueBadge = '';
+  if (!task.completed && task.dueDate && task.dueDate < today) {
+    const days = Math.round((new Date(today + 'T00:00:00') - new Date(task.dueDate + 'T00:00:00')) / 86400000);
+    overdueBadge = `<span class="task-overdue">${days === 1 ? '1 day overdue' : `${days} days overdue`}</span>`;
+  }
   const completedDate = task.completed && task.completedAt
     ? `<span class="completed-date">Done ${task.completedAt.slice(0, 10)}</span>` : '';
 
@@ -52,7 +58,7 @@ function renderTaskCard(task, { showCategory = false } = {}) {
       <div class="task-checkbox" data-action="toggle"></div>
       <span class="task-title">${escapeHtml(task.title)}</span>
       <span class="priority-badge priority-${task.priority}">${priorityLabel(task.priority)}</span>
-      ${catBadge}${due}${repeatBadge}
+      ${catBadge}${due}${overdueBadge}${repeatBadge}
     </div>
     <div class="task-body">
       ${task.notes ? `<p class="task-notes">${escapeHtml(task.notes)}</p>` : ''}
