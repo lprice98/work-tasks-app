@@ -20,6 +20,9 @@
     </nav>
 
     <main id="content">
+      <div id="search-bar">
+        <input type="search" id="search-input" placeholder="Search tasks... (press /)">
+      </div>
       <div id="task-area">
         <div id="active-tasks"></div>
         <div id="completed-section" class="hidden">
@@ -50,6 +53,14 @@
           </select>
         </label>
         <label>Due Date<input type="date" id="f-due"></label>
+        <label>Repeat
+          <select id="f-repeat">
+            <option value="">None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </label>
         <label>Notes<textarea id="f-notes" rows="3" placeholder="Optional notes"></textarea></label>
         <div id="form-actions">
           <button id="form-cancel">Cancel</button>

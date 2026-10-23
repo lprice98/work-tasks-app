@@ -1,4 +1,4 @@
-function createTask({ title, category, priority, dueDate = null, notes = '' }) {
+function createTask({ title, category, priority, dueDate = null, notes = '', repeat = null }) {
   return {
     id: crypto.randomUUID(),
     title,
@@ -6,6 +6,7 @@ function createTask({ title, category, priority, dueDate = null, notes = '' }) {
     priority,
     dueDate,
     notes,
+    repeat,
     completed: false,
     completedAt: null,
     createdAt: new Date().toISOString(),
@@ -55,6 +56,25 @@ function rolloverTasks(tasks, today) {
   });
 }
 
+function getNextDueDate(dueDate, repeat) {
+  const base = dueDate ? new Date(dueDate + 'T00:00:00') : new Date();
+  if (repeat === 'daily') base.setDate(base.getDate() + 1);
+  else if (repeat === 'weekly') base.setDate(base.getDate() + 7);
+  else if (repeat === 'monthly') base.setMonth(base.getMonth() + 1);
+  return base.toISOString().slice(0, 10);
+}
+
+function createRecurringInstance(task) {
+  return createTask({
+    title: task.title,
+    category: task.category,
+    priority: task.priority,
+    dueDate: getNextDueDate(task.dueDate, task.repeat),
+    notes: task.notes,
+    repeat: task.repeat,
+  });
+}
+
 if (typeof module !== 'undefined') {
-  module.exports = { createTask, completeTask, uncompleteTask, deleteTask, updateTask, getActive, getCompleted, getUpcoming, rolloverTasks };
+  module.exports = { createTask, completeTask, uncompleteTask, deleteTask, updateTask, getActive, getCompleted, getUpcoming, rolloverTasks, getNextDueDate, createRecurringInstance };
 }

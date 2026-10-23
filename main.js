@@ -1,9 +1,13 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { rolloverTasks } = require('./src/tasks');
 
 const DATA_FILE = path.join(app.getPath('userData'), 'tasks.json');
+
+let win = null;
+let tray = null;
+let isQuitting = false;
 
 function ensureDataDir() {
   const dir = path.dirname(DATA_FILE);
@@ -11,7 +15,7 @@ function ensureDataDir() {
 }
 
 function createWindow() {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 900,
     height: 700,
     minWidth: 600,
@@ -25,6 +29,20 @@ function createWindow() {
     backgroundColor: '#1e1e1e',
   });
   win.loadFile('index.html');
+
+  const iconPath = path.join(__dirname, 'build', 'icon.ico');
+  tray = new Tray(nativeImage.createFromPath(iconPath));
+  tray.setToolTip('Work Tasks');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'Show', click: () => { win.show(); win.focus(); } },
+    { type: 'separator' },
+    { label: 'Quit', click: () => { isQuitting = true; app.quit(); } },
+  ]));
+  tray.on('double-click', () => { win.show(); win.focus(); });
+
+  win.on('close', e => {
+    if (!isQuitting) { e.preventDefault(); win.hide(); }
+  });
 }
 
 ipcMain.handle('tasks:read', () => {

@@ -8,6 +8,8 @@ const {
   getCompleted,
   getUpcoming,
   rolloverTasks,
+  getNextDueDate,
+  createRecurringInstance,
 } = require('../src/tasks');
 
 describe('createTask', () => {
@@ -178,5 +180,42 @@ describe('rolloverTasks', () => {
     const original = [t];
     rolloverTasks(original, '2026-10-23');
     expect(original[0].category).toBe('thisweek');
+  });
+});
+
+describe('getNextDueDate', () => {
+  test('adds 1 day for daily', () => {
+    expect(getNextDueDate('2026-10-23', 'daily')).toBe('2026-10-24');
+  });
+
+  test('adds 7 days for weekly', () => {
+    expect(getNextDueDate('2026-10-23', 'weekly')).toBe('2026-10-30');
+  });
+
+  test('adds 1 month for monthly', () => {
+    expect(getNextDueDate('2026-10-23', 'monthly')).toBe('2026-11-23');
+  });
+
+  test('handles month rollover for daily', () => {
+    expect(getNextDueDate('2026-10-31', 'daily')).toBe('2026-11-01');
+  });
+});
+
+describe('createRecurringInstance', () => {
+  test('creates new task with next due date and same repeat', () => {
+    const t = createTask({ title: 'Stand-up', category: 'today', priority: 'high', dueDate: '2026-10-23', repeat: 'daily' });
+    const next = createRecurringInstance(t);
+    expect(next.title).toBe('Stand-up');
+    expect(next.dueDate).toBe('2026-10-24');
+    expect(next.repeat).toBe('daily');
+    expect(next.completed).toBe(false);
+    expect(next.id).not.toBe(t.id);
+  });
+
+  test('preserves category and priority', () => {
+    const t = createTask({ title: 'A', category: 'thisweek', priority: 'medium', dueDate: '2026-10-23', repeat: 'weekly' });
+    const next = createRecurringInstance(t);
+    expect(next.category).toBe('thisweek');
+    expect(next.priority).toBe('medium');
   });
 });
