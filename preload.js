@@ -16,4 +16,9 @@ contextBridge.exposeInMainWorld('taskAPI', {
   onMaximized: (cb) => ipcRenderer.on('window:maximized', (_, isMax) => cb(isMax)),
   readHabits: () => ipcRenderer.invoke('habits:read'),
   writeHabits: (habits) => ipcRenderer.invoke('habits:write', habits),
+  getVersion: () => ipcRenderer.invoke('app:getVersion'),
+  checkForUpdates: () => ipcRenderer.invoke('app:checkForUpdates'),
+  downloadUpdate: () => ipcRenderer.invoke('app:downloadUpdate'),
+  installUpdate: () => ipcRenderer.invoke('app:installUpdate'),
+  onUpdateReady: (cb) => ipcRenderer.on('update:ready', cb),
 });

@@ -659,6 +659,43 @@ function initSettingsHandlers() {
       showToast('No rows found in file');
     }
   });
+
+  const versionEl = document.getElementById('settings-version');
+  if (versionEl && window.taskAPI.getVersion) {
+    window.taskAPI.getVersion().then(v => { versionEl.textContent = v ? `v${v}` : ''; });
+  }
+
+  const updateBtn = document.getElementById('settings-check-update');
+  const updateStatus = document.getElementById('settings-update-status');
+  let updateReady = false;
+
+  if (window.taskAPI.onUpdateReady) {
+    window.taskAPI.onUpdateReady(() => {
+      updateReady = true;
+      if (updateStatus) { updateStatus.textContent = 'Update downloaded — click Install to apply.'; updateStatus.style.display = 'block'; }
+      if (updateBtn) updateBtn.textContent = '⬇ Install Update';
+    });
+  }
+
+  updateBtn?.addEventListener('click', async () => {
+    if (updateReady) { window.taskAPI.installUpdate?.(); return; }
+    updateBtn.textContent = 'Checking…';
+    updateBtn.disabled = true;
+    if (updateStatus) updateStatus.style.display = 'none';
+    const res = await window.taskAPI.checkForUpdates();
+    updateBtn.disabled = false;
+    if (res?.status === 'up-to-date') {
+      updateBtn.textContent = '↺ Check for Updates';
+      if (updateStatus) { updateStatus.textContent = `You're on the latest version (v${res.version}).`; updateStatus.style.display = 'block'; }
+    } else if (res?.status === 'available') {
+      updateBtn.textContent = '⬇ Download v' + res.latest;
+      if (updateStatus) { updateStatus.textContent = `v${res.latest} available (current: v${res.current}). Downloading…`; updateStatus.style.display = 'block'; }
+      window.taskAPI.downloadUpdate?.();
+    } else {
+      updateBtn.textContent = '↺ Check for Updates';
+      if (updateStatus) { updateStatus.textContent = 'Could not check for updates.'; updateStatus.style.display = 'block'; }
+    }
+  });
 }
 
 // ─── Import column mapper ───

@@ -33,9 +33,15 @@
     "nsis": {
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "lprice98",
+      "repo": "work-tasks-app"
     }
   },
   "dependencies": {
+    "electron-updater": "^6.8.11",
     "xlsx": "^0.18.5"
   }
 }

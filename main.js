@@ -2,6 +2,10 @@ const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, Notification, dial
 const path = require('path');
 const fs = require('fs');
 const { rolloverTasks } = require('./src/tasks');
+const { autoUpdater } = require('electron-updater');
+
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = false;
 
 const DATA_FILE = path.join(app.getPath('userData'), 'tasks.json');
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json');
@@ -256,6 +260,34 @@ ipcMain.handle('app:getAutoStart', () => {
 
 ipcMain.handle('app:setAutoStart', (_, enable) => {
   try { app.setLoginItemSettings({ openAtLogin: enable }); } catch {}
+});
+
+ipcMain.handle('app:getVersion', () => app.getVersion());
+
+ipcMain.handle('app:checkForUpdates', async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    if (!result) return { status: 'up-to-date' };
+    const latest = result.updateInfo.version;
+    const current = app.getVersion();
+    if (latest === current) return { status: 'up-to-date', version: current };
+    return { status: 'available', current, latest };
+  } catch (err) {
+    return { status: 'error', message: err.message };
+  }
+});
+
+ipcMain.handle('app:downloadUpdate', () => {
+  autoUpdater.downloadUpdate();
+});
+
+autoUpdater.on('update-downloaded', () => {
+  if (win) win.webContents.send('update:ready');
+});
+
+ipcMain.handle('app:installUpdate', () => {
+  isQuitting = true;
+  autoUpdater.quitAndInstall();
 });
 
 const gotLock = app.requestSingleInstanceLock();
