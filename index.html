@@ -8,66 +8,368 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="app">
-    <nav id="sidebar">
-      <div id="app-title">Work Tasks</div>
-      <ul id="tabs">
-        <li class="tab active" data-category="today">Today <span class="tab-badge"></span></li>
-        <li class="tab" data-category="thisweek">This Week <span class="tab-badge"></span></li>
-        <li class="tab" data-category="backlog">Backlog <span class="tab-badge"></span></li>
-        <li class="tab" data-category="upcoming">Upcoming <span class="tab-badge"></span></li>
-      </ul>
-    </nav>
-
-    <main id="content">
-      <div id="search-bar">
-        <input type="search" id="search-input" placeholder="Search tasks... (press /)">
+  <div id="app-wrapper">
+    <div id="titlebar">
+      <span id="titlebar-title">Work Tasks</span>
+      <button id="focus-exit">Exit Focus</button>
+      <div id="titlebar-controls">
+        <button id="btn-minimize" title="Minimize">&#x2500;</button>
+        <button id="btn-maximize" title="Maximize">&#x25A1;</button>
+        <button id="btn-close" title="Close">&#x2715;</button>
       </div>
-      <div id="task-area">
-        <div id="active-tasks"></div>
-        <div id="completed-section" class="hidden">
-          <button id="completed-toggle">▶ Completed (<span id="completed-count">0</span>)</button>
-          <div id="completed-tasks" class="hidden"></div>
+    </div>
+
+    <div id="app">
+      <nav id="sidebar">
+        <ul id="tabs">
+          <li class="tab active" data-category="today">
+            <div class="tab-row">
+              <span class="tab-icon">&#x2299;</span>
+              <span class="tab-label">Today</span>
+              <span class="tab-badge"></span>
+            </div>
+            <div class="tab-progress-bar"><div class="tab-progress-fill"></div></div>
+          </li>
+          <li class="tab" data-category="thisweek">
+            <div class="tab-row">
+              <span class="tab-icon">&#x2630;</span>
+              <span class="tab-label">This Week</span>
+              <span class="tab-badge"></span>
+            </div>
+            <div class="tab-progress-bar"><div class="tab-progress-fill"></div></div>
+          </li>
+          <li class="tab" data-category="backlog">
+            <div class="tab-row">
+              <span class="tab-icon">&#x2261;</span>
+              <span class="tab-label">Backlog</span>
+              <span class="tab-badge"></span>
+            </div>
+            <div class="tab-progress-bar"><div class="tab-progress-fill"></div></div>
+          </li>
+          <li class="tab" data-category="upcoming">
+            <div class="tab-row">
+              <span class="tab-icon">&#x25B8;</span>
+              <span class="tab-label">Upcoming</span>
+              <span class="tab-badge"></span>
+            </div>
+            <div class="tab-progress-bar"><div class="tab-progress-fill"></div></div>
+          </li>
+          <li class="tab tab-special" data-view="alldone">
+            <div class="tab-row">
+              <span class="tab-icon">&#x2713;</span>
+              <span class="tab-label">All Done</span>
+            </div>
+          </li>
+          <li class="tab tab-special" data-view="stats">
+            <div class="tab-row">
+              <span class="tab-icon">&#x25A3;</span>
+              <span class="tab-label">Stats</span>
+            </div>
+          </li>
+          <li class="tab tab-special" data-view="habits">
+            <div class="tab-row">
+              <span class="tab-icon">&#x25C9;</span>
+              <span class="tab-label">Habits</span>
+            </div>
+          </li>
+          <li class="tab tab-special" data-view="calendar">
+            <div class="tab-row">
+              <span class="tab-icon">&#x25A6;</span>
+              <span class="tab-label">Calendar</span>
+            </div>
+          </li>
+          <li class="tab tab-special" data-view="settings">
+            <div class="tab-row">
+              <span class="tab-icon">&#x2699;</span>
+              <span class="tab-label">Settings</span>
+            </div>
+          </li>
+        </ul>
+        <div id="sidebar-footer">
+          <div class="footer-row">
+            <button id="focus-mode-btn" title="Focus mode">&#x229E; Focus</button>
+            <button id="shortcuts-btn" title="Keyboard shortcuts (?)">?</button>
+          </div>
+          <button id="sidebar-toggle" title="Collapse sidebar">&#x2039;</button>
         </div>
-      </div>
+      </nav>
 
-      <div id="add-bar">
-        <button id="add-btn">+ Add Task</button>
-      </div>
+      <main id="content">
+        <!-- Task view (today/thisweek/backlog/upcoming) -->
+        <div id="task-view" class="content-view active">
+          <div id="search-bar">
+            <input type="search" id="search-input" placeholder="Search tasks... (press /)">
+            <select id="sort-select" title="Sort tasks">
+              <option value="default">Default</option>
+              <option value="priority">Priority</option>
+              <option value="group-priority">By Group</option>
+              <option value="dueDate">Due Date</option>
+              <option value="title">A&#x2013;Z</option>
+            </select>
+          </div>
+          <div id="tag-filter-bar" class="hidden"></div>
+          <div id="time-total" class="hidden"></div>
+          <div id="task-area">
+            <div id="active-tasks"></div>
+            <div id="completed-section" class="hidden">
+              <button id="completed-toggle">&#x25B6; Completed (<span id="completed-count">0</span>)</button>
+              <div id="completed-tasks" class="hidden"></div>
+            </div>
+          </div>
 
-      <div id="form-panel" class="hidden">
-        <h2 id="form-title">New Task</h2>
-        <label>Title<input type="text" id="f-title" placeholder="Task title"></label>
-        <label>Category
-          <select id="f-category">
-            <option value="today">Today</option>
-            <option value="thisweek">This Week</option>
-            <option value="backlog">Backlog</option>
-          </select>
-        </label>
-        <label>Priority
-          <select id="f-priority">
-            <option value="high">High</option>
-            <option value="medium" selected>Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </label>
-        <label>Due Date<input type="date" id="f-due"></label>
-        <label>Repeat
-          <select id="f-repeat">
-            <option value="">None</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </label>
-        <label>Notes<textarea id="f-notes" rows="3" placeholder="Optional notes"></textarea></label>
-        <div id="form-actions">
-          <button id="form-cancel">Cancel</button>
-          <button id="form-save">Save</button>
+          <div id="add-bar">
+            <button id="add-btn">+ Add Task</button>
+          </div>
+
+          <div id="form-panel">
+            <h2 id="form-title">New Task</h2>
+            <label>Title<input type="text" id="f-title" placeholder="Task title"></label>
+            <label>Category
+              <select id="f-category">
+                <option value="today">Today</option>
+                <option value="thisweek">This Week</option>
+                <option value="backlog">Backlog</option>
+              </select>
+            </label>
+            <label>Priority
+              <select id="f-priority">
+                <option value="high">High</option>
+                <option value="medium" selected>Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </label>
+            <label>Due Date<input type="date" id="f-due"></label>
+            <label>Time (optional)<input type="time" id="f-time" placeholder="HH:MM"></label>
+            <div id="due-quick-picks">
+              <button type="button" class="quick-date-btn" data-days="0">Today</button>
+              <button type="button" class="quick-date-btn" data-days="1">Tomorrow</button>
+              <button type="button" class="quick-date-btn" data-days="7">+1 Week</button>
+            </div>
+            <label>Repeat
+              <select id="f-repeat">
+                <option value="">None</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </label>
+            <label>Tags<input type="text" id="f-tags" placeholder="tag1, tag2, tag3"></label>
+            <label>Notes<textarea id="f-notes" rows="3" placeholder="Optional notes (supports **bold**, *italic*, `code`)"></textarea></label>
+            <label>Est. Time (min)<input type="number" id="f-estimate" min="0" step="5" placeholder="e.g. 30"></label>
+            <div id="form-actions">
+              <button id="form-cancel">Cancel</button>
+              <button id="form-save">Save</button>
+            </div>
+          </div>
         </div>
+
+        <!-- All Done view -->
+        <div id="alldone-view" class="content-view">
+          <div id="alldone-header">
+            <h2>All Completed Tasks</h2>
+          </div>
+          <div id="alldone-list"></div>
+        </div>
+
+        <!-- Stats view -->
+        <div id="stats-view" class="content-view">
+          <h2 class="view-heading">Statistics</h2>
+          <div id="stats-grid">
+            <div class="stat-card" id="stat-total-done">
+              <div class="stat-value">0</div>
+              <div class="stat-label">Total Completed</div>
+            </div>
+            <div class="stat-card" id="stat-done-today">
+              <div class="stat-value">0</div>
+              <div class="stat-label">Done Today</div>
+            </div>
+            <div class="stat-card" id="stat-done-week">
+              <div class="stat-value">0</div>
+              <div class="stat-label">Done This Week</div>
+            </div>
+            <div class="stat-card" id="stat-streak">
+              <div class="stat-value">0</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+          </div>
+          <div id="stats-chart-section">
+            <h3>Last 7 Days</h3>
+            <div id="stats-bar-chart"></div>
+          </div>
+          <div id="stats-priority-section">
+            <h3>Completed by Priority</h3>
+            <div id="stats-priority-bars"></div>
+          </div>
+        </div>
+
+        <!-- Habits view -->
+        <div id="habits-view" class="content-view">
+          <div class="view-header-row">
+            <h2 class="view-heading" style="padding:0">Habits</h2>
+            <button id="add-habit-btn">+ Add Habit</button>
+          </div>
+          <div id="habit-today-progress">
+            <span id="habit-today-label">Today: 0 / 0</span>
+            <div id="habit-today-bar"><div id="habit-today-fill"></div></div>
+          </div>
+          <div id="habits-list"></div>
+          <div id="habit-form-panel">
+            <h3 id="habit-form-title">New Habit</h3>
+            <label>Name<input type="text" id="hf-name" placeholder="e.g. Exercise, Read, Meditate"></label>
+            <div class="habit-form-row">
+              <span class="setting-label">Color</span>
+              <div id="hf-colors">
+                <button class="hf-color-btn" data-color="#4a9eff" style="background:#4a9eff" title="Blue"></button>
+                <button class="hf-color-btn" data-color="#2ecc71" style="background:#2ecc71" title="Green"></button>
+                <button class="hf-color-btn" data-color="#e74c3c" style="background:#e74c3c" title="Red"></button>
+                <button class="hf-color-btn" data-color="#f39c12" style="background:#f39c12" title="Orange"></button>
+                <button class="hf-color-btn" data-color="#9b59b6" style="background:#9b59b6" title="Purple"></button>
+                <button class="hf-color-btn" data-color="#1abc9c" style="background:#1abc9c" title="Teal"></button>
+              </div>
+            </div>
+            <div id="habit-form-actions">
+              <button id="hf-cancel">Cancel</button>
+              <button id="hf-save">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar view -->
+        <div id="calendar-view" class="content-view">
+          <div id="cal-toolbar">
+            <div id="cal-nav">
+              <button id="cal-prev">&#x2039;</button>
+              <span id="cal-title">Week</span>
+              <button id="cal-next">&#x203A;</button>
+              <button id="cal-today-btn">Today</button>
+            </div>
+            <div id="cal-mode-btns">
+              <button class="cal-mode-btn" id="cal-day-btn">Day</button>
+              <button class="cal-mode-btn active" id="cal-week-btn">Week</button>
+            </div>
+          </div>
+          <div id="cal-container">
+            <div id="cal-allday">
+              <div class="cal-time-gutter">all day</div>
+              <div id="cal-allday-content"></div>
+            </div>
+            <div id="cal-scroll-area">
+              <div id="cal-time-grid"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings view -->
+        <div id="settings-view" class="content-view">
+          <h2 class="view-heading">Settings</h2>
+          <div id="settings-list">
+            <div class="settings-group">
+              <div class="settings-group-title">Appearance</div>
+              <div class="settings-row">
+                <label class="setting-label">Theme</label>
+                <button id="settings-theme-toggle" class="settings-btn">&#x2600; Light</button>
+              </div>
+            </div>
+            <div class="settings-group">
+              <div class="settings-group-title">Startup</div>
+              <div class="settings-row">
+                <label class="setting-label">Start at login</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="settings-auto-start">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <label class="setting-label">Auto-rollover overdue tasks to Today</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="settings-auto-rollover" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="settings-group">
+              <div class="settings-group-title">Notifications</div>
+              <div class="settings-row">
+                <label class="setting-label">Daily reminder</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="settings-notify-enabled" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <label class="setting-label">Reminder hour (0–23)</label>
+                <input type="number" id="settings-notify-hour" min="0" max="23" value="9" class="settings-number">
+              </div>
+            </div>
+            <div class="settings-group">
+              <div class="settings-group-title">Tasks</div>
+              <div class="settings-row">
+                <label class="setting-label">Default sort</label>
+                <select id="settings-default-sort" class="settings-select">
+                  <option value="default">Default</option>
+                  <option value="priority">Priority</option>
+                  <option value="group-priority">By Group</option>
+                  <option value="dueDate">Due Date</option>
+                  <option value="title">A–Z</option>
+                </select>
+              </div>
+              <div class="settings-row">
+                <label class="setting-label">Default category for new tasks</label>
+                <select id="settings-default-category" class="settings-select">
+                  <option value="today">Today</option>
+                  <option value="thisweek">This Week</option>
+                  <option value="backlog">Backlog</option>
+                </select>
+              </div>
+              <div class="settings-row">
+                <label class="setting-label">Confirm before delete</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="settings-confirm-delete">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="settings-group">
+              <div class="settings-group-title">Data</div>
+              <div class="settings-row">
+                <label class="setting-label">Export to Excel</label>
+                <button id="settings-export-excel" class="settings-btn">&#x2913; Export .xlsx</button>
+              </div>
+              <div class="settings-row">
+                <label class="setting-label">Import from CSV / Excel</label>
+                <button id="settings-import" class="settings-btn">&#x2912; Import</button>
+              </div>
+              <div class="settings-row">
+                <label class="setting-label">Export to text file</label>
+                <button id="settings-export-txt" class="settings-btn">&#x2193; Export .txt</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="shortcuts-overlay" class="hidden">
+    <div id="shortcuts-modal">
+      <div id="shortcuts-header">
+        <span>Keyboard Shortcuts</span>
+        <button id="shortcuts-close">&#xD7;</button>
       </div>
-    </main>
+      <div id="shortcuts-list">
+        <div class="shortcut-row"><kbd>N</kbd><span>New task</span></div>
+        <div class="shortcut-row"><kbd>/</kbd><span>Focus search</span></div>
+        <div class="shortcut-row"><kbd>?</kbd><span>Show shortcuts</span></div>
+        <div class="shortcut-row"><kbd>Esc</kbd><span>Close / clear search</span></div>
+        <div class="shortcut-row"><kbd>Enter</kbd><span>Save task form</span></div>
+        <div class="shortcut-row"><kbd>Ctrl Z</kbd><span>Undo last action</span></div>
+        <div class="shortcut-row"><kbd>&#x2191; &#x2193;</kbd><span>Navigate tasks</span></div>
+        <div class="shortcut-row"><kbd>Space</kbd><span>Toggle focused task</span></div>
+        <div class="shortcut-row"><kbd>E</kbd><span>Edit focused task</span></div>
+        <div class="shortcut-row"><span class="shortcut-gesture">Click title</span><span>Edit inline</span></div>
+        <div class="shortcut-row"><span class="shortcut-gesture">Drag</span><span>Reorder (default sort)</span></div>
+      </div>
+    </div>
   </div>
 
   <script src="src/tasks.js"></script>

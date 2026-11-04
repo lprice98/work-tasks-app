@@ -1,16 +1,42 @@
-function createTask({ title, category, priority, dueDate = null, notes = '', repeat = null }) {
+function createTask({ title, category, priority, dueDate = null, notes = '', repeat = null, estimate = null, pinned = false, tags = [], time = null }) {
   return {
     id: crypto.randomUUID(),
     title,
     category,
     priority,
     dueDate,
+    time,
     notes,
     repeat,
+    estimate,
+    pinned,
+    tags,
+    subtasks: [],
     completed: false,
     completedAt: null,
     createdAt: new Date().toISOString(),
   };
+}
+
+function addSubtask(tasks, taskId, title) {
+  return tasks.map(t => t.id !== taskId ? t : {
+    ...t,
+    subtasks: [...(t.subtasks || []), { id: crypto.randomUUID(), title, completed: false }],
+  });
+}
+
+function toggleSubtask(tasks, taskId, subtaskId) {
+  return tasks.map(t => t.id !== taskId ? t : {
+    ...t,
+    subtasks: (t.subtasks || []).map(s => s.id === subtaskId ? { ...s, completed: !s.completed } : s),
+  });
+}
+
+function deleteSubtask(tasks, taskId, subtaskId) {
+  return tasks.map(t => t.id !== taskId ? t : {
+    ...t,
+    subtasks: (t.subtasks || []).filter(s => s.id !== subtaskId),
+  });
 }
 
 function completeTask(tasks, id) {
@@ -76,5 +102,5 @@ function createRecurringInstance(task) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { createTask, completeTask, uncompleteTask, deleteTask, updateTask, getActive, getCompleted, getUpcoming, rolloverTasks, getNextDueDate, createRecurringInstance };
+  module.exports = { createTask, completeTask, uncompleteTask, deleteTask, updateTask, getActive, getCompleted, getUpcoming, rolloverTasks, getNextDueDate, createRecurringInstance, addSubtask, toggleSubtask, deleteSubtask };
 }

@@ -10,6 +10,9 @@ const {
   rolloverTasks,
   getNextDueDate,
   createRecurringInstance,
+  addSubtask,
+  toggleSubtask,
+  deleteSubtask,
 } = require('../src/tasks');
 
 describe('createTask', () => {
@@ -22,6 +25,7 @@ describe('createTask', () => {
     expect(t.notes).toBe('');
     expect(t.completed).toBe(false);
     expect(t.completedAt).toBeNull();
+    expect(t.subtasks).toEqual([]);
     expect(typeof t.id).toBe('string');
     expect(t.id.length).toBeGreaterThan(0);
     expect(typeof t.createdAt).toBe('string');
@@ -217,5 +221,47 @@ describe('createRecurringInstance', () => {
     const next = createRecurringInstance(t);
     expect(next.category).toBe('thisweek');
     expect(next.priority).toBe('medium');
+  });
+});
+
+describe('addSubtask', () => {
+  test('adds a subtask to the correct task', () => {
+    const t = createTask({ title: 'A', category: 'today', priority: 'low' });
+    const result = addSubtask([t], t.id, 'Step 1');
+    expect(result[0].subtasks).toHaveLength(1);
+    expect(result[0].subtasks[0].title).toBe('Step 1');
+    expect(result[0].subtasks[0].completed).toBe(false);
+    expect(typeof result[0].subtasks[0].id).toBe('string');
+  });
+
+  test('does not mutate other tasks', () => {
+    const t1 = createTask({ title: 'A', category: 'today', priority: 'low' });
+    const t2 = createTask({ title: 'B', category: 'today', priority: 'low' });
+    const result = addSubtask([t1, t2], t1.id, 'Step 1');
+    expect(result[1].subtasks).toHaveLength(0);
+  });
+});
+
+describe('toggleSubtask', () => {
+  test('toggles subtask completed state', () => {
+    const t = createTask({ title: 'A', category: 'today', priority: 'low' });
+    const withSub = addSubtask([t], t.id, 'Step 1');
+    const subId = withSub[0].subtasks[0].id;
+    const toggled = toggleSubtask(withSub, t.id, subId);
+    expect(toggled[0].subtasks[0].completed).toBe(true);
+    const toggled2 = toggleSubtask(toggled, t.id, subId);
+    expect(toggled2[0].subtasks[0].completed).toBe(false);
+  });
+});
+
+describe('deleteSubtask', () => {
+  test('removes the correct subtask', () => {
+    const t = createTask({ title: 'A', category: 'today', priority: 'low' });
+    let tasks = addSubtask([t], t.id, 'Step 1');
+    tasks = addSubtask(tasks, t.id, 'Step 2');
+    const subId = tasks[0].subtasks[0].id;
+    const result = deleteSubtask(tasks, t.id, subId);
+    expect(result[0].subtasks).toHaveLength(1);
+    expect(result[0].subtasks[0].title).toBe('Step 2');
   });
 });
